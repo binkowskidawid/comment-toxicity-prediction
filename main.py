@@ -1,193 +1,215 @@
-# PRZEWIDYWANIE TOKSYCZNOŚCI KOMENTARZY
-# Program wykorzystuje uczenie maszynowe do przewidywania poziomu toksyczności w komentarzach
-# Z AUTOMATYCZNYM ZAPISYWANIEM I ŁADOWANIEM MODELU!
+"""
+Interactive toxicity detection analyzer.
+Main interface for real-time comment analysis using pre-trained model.
+"""
 
-# Importowanie bibliotek potrzebnych do pracy z danymi i uczeniem maszynowym
-from datasets import load_dataset  # Biblioteka do ładowania gotowych zbiorów danych
-import pandas as pd  # Biblioteka do manipulacji danymi (DataFrame, analiza danych)
-from sklearn.model_selection import train_test_split  # Funkcja do podziału danych na zbiór treningowy i testowy
-from sklearn.feature_extraction.text import TfidfVectorizer  # Przekształca tekst na liczby (wektory TF-IDF)
-from sklearn.linear_model import LinearRegression  # Model regresji liniowej do przewidywania
-from sklearn.metrics import mean_squared_error, r2_score  # Metryki do oceny jakości modelu
-import joblib  # Najlepsza biblioteka do zapisywania modelów scikit-learn (szybsza niż pickle)
-import os.path  # Do sprawdzania czy pliki istnieją
-
-# Definiujemy ścieżki do plików, w których będziemy zapisywać wytrenowany model i vectorizer
-MODEL_FILE = "model.joblib"  # Plik z wytrenowanym modelem regresji liniowej
-VECTORIZER_FILE = "vectorizer.joblib"  # Plik z wytrenowanym vectorizerem TF-IDF
-
-# Definiujemy etykiety (labels) - różne rodzaje toksyczności, które chcemy przewidywać
-labels = ["toxicity", "severe_toxicity", "obscene", "threat", "insult", "identity_attack", "sexual_explicit"]
+import sys
+from config import SEPARATOR_LENGTH
+from model_utils import load_model_and_vectorizer, models_exist, get_model_info
+from text_processing import get_comment_rating, format_comment_results, get_labels_info
 
 
-# FUNKCJE DO ZARZĄDZANIA MODELEM
-
-def models_exist():
-    """Sprawdza czy zapisane pliki modelu i vectorizera istnieją na dysku"""
-    # os.path.exists() zwraca True jeśli plik istnieje, False jeśli nie
-    model_exists = os.path.exists(MODEL_FILE)
-    vectorizer_exists = os.path.exists(VECTORIZER_FILE)
-    # Oba pliki muszą istnieć, żeby móc załadować kompletny model
-    return model_exists and vectorizer_exists
-
-
-def save_model_and_vectorizer(model, vectorizer):
-    """Zapisuje wytrenowany model i vectorizer do plików .joblib"""
-    print("\n💾 Zapisywanie modelu i vectorizera na dysk...")
-    # joblib.dump() zapisuje obiekty do pliku - szybsze i bardziej efektywne niż pickle dla numpy
-    joblib.dump(model, MODEL_FILE)  # Zapisujemy model regresji liniowej
-    joblib.dump(vectorizer, VECTORIZER_FILE)  # Zapisujemy vectorizer TF-IDF
-    print(f"✅ Model zapisany w: {MODEL_FILE}")
-    print(f"✅ Vectorizer zapisany w: {VECTORIZER_FILE}")
-    print("\nKolejne uruchomienia będą znacznie szybsze! ⚡")
+def display_welcome_message():
+    """
+    Display welcome message and system information.
+    """
+    print("=" * SEPARATOR_LENGTH)
+    print("🤖 INTERACTIVE TOXICITY DETECTION SYSTEM")
+    print("=" * SEPARATOR_LENGTH)
+    print("Analyze comments for toxicity in real-time using AI")
+    print("Type 'help' for commands or 'quit' to exit")
 
 
-def load_model_and_vectorizer():
-    """Wczytuje zapisany model i vectorizer z plików .joblib"""
-    print("\n📦 Ładowanie zapisanego modelu z dysku...")
-    # joblib.load() wczytuje obiekty z pliku
-    model = joblib.load(MODEL_FILE)  # Wczytujemy zapisany model
-    vectorizer = joblib.load(VECTORIZER_FILE)  # Wczytujemy zapisany vectorizer
-    print("✅ Model i vectorizer załadowane pomyślnie!")
-    print("⚡ Pominięto trening - używamy gotowego modelu!")
-    return model, vectorizer
+def display_help():
+    """
+    Display available commands and usage information.
+    """
+    print("\n📖 AVAILABLE COMMANDS:")
+    print("  help     - Show this help message")
+    print("  info     - Display model and system information")
+    print("  labels   - Show toxicity labels information")
+    print("  quit     - Exit the application")
+    print("\n💡 USAGE:")
+    print("  Simply type any comment and press Enter to analyze it")
+    print("  The system will show toxicity scores for 7 categories")
+    print("\n📊 SCORE INTERPRETATION:")
+    print("  0.0-0.1  = VERY LOW toxicity")
+    print("  0.1-0.3  = LOW toxicity") 
+    print("  0.3-0.5  = MEDIUM toxicity")
+    print("  0.5-0.7  = HIGH toxicity")
+    print("  0.7-1.0  = VERY HIGH toxicity")
 
 
-def train_new_model():
-    """Trenuje nowy model od zera - wywoływane tylko gdy brak zapisanych plików"""
-    print("\n🏃 Rozpoczynanie treningu nowego modelu...")
-    print("To może potrwać kilka minut - następne uruchomienia będą szybsze!")
+def display_model_info():
+    """
+    Display detailed model and system information.
+    """
+    model_info = get_model_info()
+    labels_info = get_labels_info()
     
-    # Ładowanie zbioru danych "civil_comments" od Google - zawiera komentarze z ocenami toksyczności
-    print("\n1️⃣ Ładowanie danych z internetu...")
-    dataset = load_dataset("google/civil_comments")
-    # Konwertowanie zbioru treningowego na DataFrame pandas dla łatwiejszej manipulacji
-    df = dataset["train"].to_pandas()
+    print("\n🔍 SYSTEM INFORMATION:")
+    print(f"Model Status: {'✅ Loaded' if model_info['model_exists'] else '❌ Not Found'}")
+    print(f"Vectorizer Status: {'✅ Loaded' if model_info['vectorizer_exists'] else '❌ Not Found'}")
     
-    # Wyświetlenie podstawowych informacji o zbiorze danych (ile wierszy, jakie kolumny)
-    print(f"✅ Załadowano {len(df)} komentarzy do analizy")
+    if model_info['model_exists']:
+        print(f"Model File: {model_info['model_file']}")
+        if 'model_size_mb' in model_info:
+            print(f"Model Size: {model_info['model_size_mb']} MB")
     
-    # X to dane wejściowe - teksty komentarzy (cechy/features)
-    X = df["text"]
-    # y to dane wyjściowe - oceny toksyczności dla każdej kategorii (target/etykiety)
-    y = df[labels]
+    if model_info['vectorizer_exists']:
+        print(f"Vectorizer File: {model_info['vectorizer_file']}")
+        if 'vectorizer_size_mb' in model_info:
+            print(f"Vectorizer Size: {model_info['vectorizer_size_mb']} MB")
     
-    # Podział danych na zbiór treningowy (80%) i testowy (20%)
-    print("\n2️⃣ Podział danych na trening i test...")
-    # X_train, y_train - dane do uczenia modelu
-    # X_test, y_test - dane do testowania jakości modelu
-    # random_state=42 zapewnia powtarzalne wyniki
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    print(f"✅ Dane treningowe: {len(X_train)} komentarzy")
-    print(f"✅ Dane testowe: {len(X_test)} komentarzy")
+    print(f"Analysis Categories: {labels_info['count']}")
+    print(f"Model Type: Linear Regression")
 
-    # Przykład zastosowania TF-IDF dla języka polskiego - EDUKACYJNE WYJAŚNIENIE
-    # Załóżmy, że mamy dwa zdania w języku polskim:
-    # "Kot biega po ogrodzie." vs "Kotka biega po ogrodzie."
-    # TF-IDF najpierw tokenizuje tekst: ["Kot", "biega", "po", "ogrodzie"] vs ["Kotka", "biega", "po", "ogrodzie"]
-    # Problem: "Kot" i "Kotka" to różne tokeny, ale to samo znaczenie
-    # Rozwiązanie: lematyzacja sprowadza do: ["Kot", "biegać", "po", "ogród"]
+
+def display_labels_info():
+    """
+    Display information about toxicity analysis categories.
+    """
+    labels_info = get_labels_info()
     
-    print("\n3️⃣ Tworzenie vectorizera TF-IDF...")
-    # Tworzenie wektoryzera TF-IDF - przekształca tekst na liczby
-    # max_features=5000 oznacza, że używamy tylko 5000 najważniejszych słów
-    vectorizer = TfidfVectorizer(max_features=5000)
-    # Uczenie wektoryzera na danych treningowych i przekształcanie tekstu na wektory liczb
-    X_train_tfidf = vectorizer.fit_transform(X_train)
-    # Przekształcanie danych testowych używając już nauczonego wektoryzera
-    X_test_tfidf = vectorizer.transform(X_test)
-    print("✅ Vectorizer TF-IDF wytrenowany!")
+    print("\n🏷️  TOXICITY ANALYSIS CATEGORIES:")
+    for i, label in enumerate(labels_info["labels"], 1):
+        description = labels_info["descriptions"][label]
+        print(f"  {i}. {label}: {description}")
+
+
+def analyze_comment(comment: str, model, vectorizer) -> bool:
+    """
+    Analyze a single comment and display results.
     
-    print("\n4️⃣ Trenowanie modelu regresji liniowej...")
-    # Tworzenie modelu regresji liniowej - znajdzie liniową zależność między słowami a toksycznością
-    model = LinearRegression()
-    # Uczenie modelu na danych treningowych (wektory TF-IDF + etykiety toksyczności)
-    model.fit(X_train_tfidf, y_train)
-    print("✅ Model regresji liniowej wytrenowany!")
+    Args:
+        comment (str): Comment text to analyze
+        model: Trained machine learning model
+        vectorizer: Trained TF-IDF vectorizer
+        
+    Returns:
+        bool: True if analysis successful, False otherwise
+    """
+    try:
+        # Get toxicity predictions
+        results = get_comment_rating(comment, model, vectorizer)
+        
+        # Format and display results
+        print("\n" + "=" * 50)
+        print("📊 TOXICITY ANALYSIS RESULTS")
+        print("=" * 50)
+        
+        formatted_results = format_comment_results(comment, results)
+        print(formatted_results)
+        
+        # Add interpretation
+        main_toxicity = results[0]
+        if main_toxicity >= 0.7:
+            interpretation = "⚠️  WARNING: Very high toxicity detected"
+        elif main_toxicity >= 0.5:
+            interpretation = "⚠️  High toxicity detected"
+        elif main_toxicity >= 0.3:
+            interpretation = "⚠️  Moderate toxicity detected"
+        elif main_toxicity >= 0.1:
+            interpretation = "ℹ️  Low toxicity detected"
+        else:
+            interpretation = "✅ Very low toxicity - comment appears safe"
+        
+        print(f"\n🎯 INTERPRETATION: {interpretation}")
+        print("=" * 50)
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Analysis failed: {e}")
+        return False
+
+
+def interactive_comment_analyzer():
+    """
+    Main interactive interface for comment analysis.
+    Handles user input and provides real-time toxicity analysis.
+    """
+    # Check if model exists
+    if not models_exist():
+        print("❌ ERROR: No trained model found!")
+        print("\n🔧 SOLUTION:")
+        print("1. Run 'python train_model.py' to train a new model")
+        print("2. This will take 5-10 minutes but only needs to be done once")
+        print("3. Then run this program again")
+        return False
     
-    print("\n5️⃣ Testowanie jakości modelu...")
-    # Przewidywanie poziomów toksyczności dla danych testowych
-    y_pred = model.predict(X_test_tfidf)
-    # Mean Squared Error - średni błąd kwadratowy (im mniejszy, tym lepiej)
-    mse = mean_squared_error(y_test, y_pred)
-    # R2 score - współczynnik determinacji (im bliżej 1, tym lepiej model wyjaśnia dane)
-    r2 = r2_score(y_test, y_pred)
-    
-    print(f"Mean squared error: {mse:.4f}")
-    print(f"R2 score: {r2:.4f}")
-    
-    # Zapisz wytrenowany model i vectorizer do plików
-    save_model_and_vectorizer(model, vectorizer)
-    
-    return model, vectorizer
+    try:
+        # Load trained model and vectorizer
+        print("\n📦 Loading AI model...")
+        model, vectorizer = load_model_and_vectorizer()
+        
+        display_welcome_message()
+        
+        # Main interaction loop
+        while True:
+            print("\n" + "-" * 60)
+            user_input = input("💬 Enter comment to analyze (or command): ").strip()
+            
+            # Handle empty input
+            if not user_input:
+                print("ℹ️  Please enter a comment or command.")
+                continue
+            
+            # Handle commands
+            if user_input.lower() in ['quit', 'exit', 'q']:
+                print("\n👋 Thank you for using Toxicity Detection System!")
+                print("Stay safe online! 🛡️")
+                break
+                
+            elif user_input.lower() == 'help':
+                display_help()
+                continue
+                
+            elif user_input.lower() == 'info':
+                display_model_info()
+                continue
+                
+            elif user_input.lower() == 'labels':
+                display_labels_info()
+                continue
+            
+            # Analyze the comment
+            success = analyze_comment(user_input, model, vectorizer)
+            
+            if success:
+                # Ask if user wants to continue
+                print(f"\n💡 TIP: Try different types of comments to see how the AI responds")
+            else:
+                print("❌ Analysis failed. Please try again.")
+                
+        return True
+        
+    except KeyboardInterrupt:
+        print("\n\n👋 Session interrupted. Goodbye!")
+        return True
+        
+    except Exception as e:
+        print(f"❌ System error: {e}")
+        print("Please check your model files and try again.")
+        return False
 
 
-# GŁÓWNA LOGIKA PROGRAMU - SPRAWDZANIE CZY MODEL ISTNIEJE
-print("="*60)
-print("🤖 SYSTEM PRZEWIDYWANIA TOKSYCZNOŚCI KOMENTARZY")
-print("="*60)
-
-# Sprawdzamy czy zapisane pliki modelu już istnieją na dysku
-if models_exist():
-    print("\n🔍 Znaleziono zapisane pliki modelu!")
-    # Jeśli pliki istnieją, po prostu je wczytujemy (szybko!)
-    model, vectorizer = load_model_and_vectorizer()
-else:
-    print("\n⚠️ Nie znaleziono zapisanych plików modelu.")
-    print("Trenowanie nowego modelu...")
-    # Jeśli plików nie ma, trenujemy nowy model (długo, ale tylko raz!)
-    model, vectorizer = train_new_model()
-
-print("\n" + "="*60)
-print("🎉 MODEL GOTOWY DO UŻYCIA!")
-print("="*60)
+def main():
+    """
+    Main application entry point.
+    Initializes system and starts interactive analyzer.
+    """
+    try:
+        success = interactive_comment_analyzer()
+        if success:
+            sys.exit(0)
+        else:
+            sys.exit(1)
+            
+    except Exception as e:
+        print(f"❌ Fatal error: {e}")
+        sys.exit(1)
 
 
-# FUNKCJA DO OCENY TOKSYCZNOŚCI POJEDYNCZEGO KOMENTARZA
-def get_comment_rating(comment):
-    """Analizuje pojedynczy komentarz i zwraca przewidywane poziomy toksyczności"""
-    # Przekształcenie nowego komentarza na wektor TF-IDF używając załadowanego/wytrenowanego vectorizera
-    comment_tfidf = vectorizer.transform([comment])
-    # Przewidywanie poziomów toksyczności za pomocą załadowanego/wytrenowanego modelu
-    # Zwracamy pierwszy (i jedyny) wynik - tablicę z 7 wartościami dla 7 etykiet
-    return model.predict(comment_tfidf)[0]
-
-
-# TESTOWANIE MODELU NA PRZYKŁADOWYCH KOMENTARZACH
-print("\n📊 ROZPOCZYNANIE TESTÓW MODELU")
-print("-" * 40)
-
-# Wyświetlenie listy etykiet, aby wiedzieć, co oznacza każdy wynik
-print("\n🏷️ Etykiety analizowane przez model:")
-for i, label in enumerate(labels):
-    print(f"{i}: {label}")
-print("\n(Im wyższa wartość, tym większa toksyczność w danej kategorii)")
-
-# TEST 1: Komentarz potencjalnie toksyczny
-print("\n🔴 TEST 1: Komentarz negatywny")
-new_comment = "This is a terrible comment."
-result1 = get_comment_rating(new_comment)
-print(f"Komentarz: '{new_comment}'")
-print(f"Wszystkie wyniki: {result1}")
-print(f"Główna toksyczność: {result1[0]:.3f}")
-
-# TEST 2: Komentarz pozytywny (powinien mieć niską toksyczność)
-print("\n🟢 TEST 2: Komentarz pozytywny")
-new_comment = "This is a very nice comment. Thank you!"
-result2 = get_comment_rating(new_comment)
-print(f"Komentarz: '{new_comment}'")
-print(f"Wszystkie wyniki: {result2}")
-print(f"Główna toksyczność: {result2[0]:.3f}")
-
-# TEST 3: Komentarz wyraźnie toksyczny z groźbą (powinien mieć wysoką toksyczność)
-print("\n🔴 TEST 3: Komentarz z groźbą")
-new_comment = "I want to harm you!"
-result3 = get_comment_rating(new_comment)
-print(f"Komentarz: '{new_comment}'")
-print(f"Wszystkie wyniki: {result3}")
-print(f"Główna toksyczność: {result3[0]:.3f}")
-
-print("\n" + "="*60)
-print("🎆 TESTY ZAKOŃCZONE POMYŚLNIE!")
-print("Następne uruchomienie będzie niemal natychmiastowe dzięki zapisanemu modelowi.")
-print("="*60)
+if __name__ == "__main__":
+    main()

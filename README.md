@@ -1,361 +1,394 @@
-# Przewidywanie Toksyczności Komentarzy - Kurs Machine Learning
+# Toxicity Detection System - Machine Learning Course
 
-## 📝 Opis projektu
+## 📝 Project Description
 
-Ten projekt pokazuje, jak stworzyć system automatycznego wykrywania toksyczności w komentarzach internetowych używając technik uczenia maszynowego. Program analizuje teksty i przewiduje poziom toksyczności w różnych kategoriach.
+This project demonstrates how to create an automated system for detecting toxicity in online comments using machine learning techniques. The program analyzes texts and predicts toxicity levels across different categories.
 
-⚡ **NOWOŚĆ:** Program automatycznie zapisuje wytrenowany model! Pierwsze uruchomienie zajmuje kilka minut, ale następne są natychmiastowe.
+**✨ FEATURES:** Modular architecture with separate training, testing, and analysis components for professional development workflow!
 
-## 🎯 Co się nauczysz
+## 🎯 What You'll Learn
 
-- Jak ładować i przetwarzać zbiory danych tekstowych
-- Jak przekształcać tekst na liczby (TF-IDF)
-- Jak trenować model uczenia maszynowego
-- Jak oceniać jakość modelu
-- Jak używać modelu do przewidywań
-- **Jak zapisywać i ładować wytrenowane modele (optymalizacja)**
+- How to load and process text datasets
+- How to convert text to numbers (TF-IDF)
+- How to train machine learning models
+- How to evaluate model quality
+- How to use models for predictions
+- **How to save and load trained models (optimization)**
+- **Professional Python project structure**
+- **Modular programming principles**
 
-## 📚 Wymagania
+## 🏗️ Project Structure
+
+```
+PODSTAWY/
+├── main.py                 # Interactive comment analyzer
+├── train_model.py         # Standalone model training
+├── test_model.py          # Testing and evaluation
+├── config.py              # Configuration and constants
+├── model_utils.py         # Model save/load utilities
+├── text_processing.py     # Text processing functions
+├── README.md              # English documentation (this file)
+├── README_PL.md           # Polish documentation
+├── requirements.txt       # Project dependencies
+└── models/                # Saved model files
+    ├── model.joblib
+    └── vectorizer.joblib
+```
+
+## 📚 Requirements
 
 ```bash
-pip install datasets pandas scikit-learn
+pip install -r requirements.txt
 ```
 
-### Biblioteki używane w projekcie:
+### Libraries used in the project:
 
-- **datasets** - ładowanie gotowych zbiorów danych
-- **pandas** - manipulacja danymi
-- **scikit-learn** - narzędzia do uczenia maszynowego
-- **joblib** - zapisywanie i ładowanie modelów (wbudowana w scikit-learn)
-- **os.path** - sprawdzanie istnienia plików (wbudowana w Python)
+- **datasets** - loading ready-made datasets
+- **pandas** - data manipulation
+- **scikit-learn** - machine learning tools
+- **joblib** - saving and loading models (built into scikit-learn)
+- **numpy** - numerical computations
+- **scipy** - scientific computing
 
-## 💾 Automatyczne zapisywanie modelu
+## 🚀 Quick Start Guide
 
-### ⚡ Szybkość uruchomień
-
-**Pierwsze uruchomienie (~5-10 minut):**
-1. 🔄 Ładowanie danych z internetu
-2. 🧠 Trenowanie modelu regresji liniowej
-3. 📊 Testowanie jakości modelu
-4. 💾 Automatyczne zapisanie modelu na dysk
-
-**Kolejne uruchomienia (~2-5 sekund):**
-1. ✅ Znalezienie zapisanych plików
-2. ⚡ Błyskawiczne wczytanie modelu
-3. 🚀 Natychmiastowe uruchomienie testów
-
-### 📁 Pliki modelu
-
-Program automatycznie tworzy dwa pliki:
-
-- **`model.joblib`** - wytrenowany model regresji liniowej
-- **`vectorizer.joblib`** - wytrenowany vectorizer TF-IDF
-
-**⚠️ Ważne:** Oba pliki są potrzebne do działania programu. Nie usuwaj ich!
-
-### 🔄 Re-trenowanie modelu
-
-Jeśli chcesz wytrenować model od nowa:
-1. Usuń pliki `model.joblib` i `vectorizer.joblib`
-2. Uruchom program ponownie - automatycznie wytrenuje nowy model
-
-### 🛠️ Troubleshooting
-
-**Problem:** Program się zawiesza lub pokazuje błędy
-- **Rozwiązanie:** Usuń pliki `.joblib` i uruchom ponownie
-
-**Problem:** Wyniki są dziwne po aktualizacji kodu
-- **Rozwiązanie:** Usuń stare pliki modelu, aby wytrenować nowy
-
-**Problem:** Brak miejsca na dysku
-- **Rozwiązanie:** Pliki modelu zajmują ~50MB - sprawdź miejsce na dysku
-
-## 🔬 Krok po kroku - jak działa kod
-
-Program ma teraz **inteligentną logikę** - sprawdza czy model już istnieje!
-
-### 1. 🔍 Sprawdzenie czy model istnieje
-
-```python
-if models_exist():
-    model, vectorizer = load_model_and_vectorizer()
-else:
-    model, vectorizer = train_new_model()
+### Step 1: Install Dependencies
+```bash
+pip install -r requirements.txt
 ```
 
-**Co się dzieje:**
-- Program sprawdza czy istnieją pliki `model.joblib` i `vectorizer.joblib`
-- **Jeśli TAK:** Ładuje zapisane modele (szybko! ⚡)
-- **Jeśli NIE:** Trenuje nowe modele (wolno, ale tylko raz 🐌→⚡)
-
----
-
-## 🚀 Ścieżka A: Model już istnieje (kolejne uruchomienia)
-
-### Błyskawiczne ładowanie
-
-```python
-model = joblib.load("model.joblib")
-vectorizer = joblib.load("vectorizer.joblib")
+### Step 2: Train the Model (First Time Only)
+```bash
+python train_model.py
 ```
+*This takes 5-10 minutes but only needs to be done once*
 
-**Co się dzieje:**
-- Wczytanie zapisanego modelu z dysku (~1 sekunda)
-- Wczytanie zapisanego vectorizera (~1 sekunda) 
-- Przejście bezpośrednio do testów
-
----
-
-## 🐌 Ścieżka B: Pierwszy raz (trenowanie nowego modelu)
-
-### 2. Ładowanie danych
-
-```python
-dataset = load_dataset("google/civil_comments")
-df = dataset["train"].to_pandas()
-```
-
-**Co się dzieje:**
-- Pobieramy zbiór danych "Civil Comments" od Google
-- Zawiera prawdziwe komentarze z internetu z ocenami ekspertów
-- Konwertujemy na format pandas DataFrame dla łatwiejszej pracy
-
-### 3. Przygotowanie etykiet
-
-```python
-labels = ["toxicity", "severe_toxicity", "obscene", "threat", "insult", "identity_attack", "sexual_explicit"]
-X = df["text"]  # Teksty komentarzy (dane wejściowe)
-y = df[labels]  # Oceny toksyczności (dane wyjściowe)
-```
-
-**Rodzaje toksyczności:**
-- `toxicity` - ogólna toksyczność
-- `severe_toxicity` - poważna toksyczność  
-- `obscene` - wulgarność
-- `threat` - groźby
-- `insult` - obelgi
-- `identity_attack` - ataki na tożsamość
-- `sexual_explicit` - treści seksualne
-
-### 4. Podział danych
-
-```python
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-```
-
-**Dlaczego dzielimy dane:**
-- **80% na trening** - do uczenia modelu
-- **20% na test** - do sprawdzenia, czy model działa na nowych danych
-- `random_state=42` - zapewnia powtarzalne wyniki
-
-### 5. Przekształcanie tekstu na liczby (TF-IDF)
-
-```python
-vectorizer = TfidfVectorizer(max_features=5000)
-X_train_tfidf = vectorizer.fit_transform(X_train)
-X_test_tfidf = vectorizer.transform(X_test)
-```
-
-**Co to jest TF-IDF:**
-- **TF (Term Frequency)** - jak często słowo pojawia się w dokumencie
-- **IDF (Inverse Document Frequency)** - jak rzadkie jest słowo w całym zbiorze
-- **Efekt:** Ważne słowa mają wyższą wartość, popularne słowa (jak "i", "a") mają niższą
-
-**Przykład:**
-- Komentarz: "Ten film jest okropny"
-- TF-IDF zamienia to na wektor liczb: [0.0, 0.3, 0.0, 0.8, 0.5, ...]
-- Każda pozycja odpowiada jednemu słowu ze słownika
-
-### 6. Trenowanie modelu
-
-```python
-model = LinearRegression()
-model.fit(X_train_tfidf, y_train)
-```
-
-**Regresja liniowa:**
-- Znajduje liniową zależność między słowami a poziomem toksyczności
-- Dla każdego słowa przypisuje wagę (dodatnią lub ujemną)
-- Słowa jak "stupid", "hate" dostaną wysokie wagi dodatnie
-- Słowa jak "love", "thank you" dostaną wagi ujemne
-
-### 7. Ocena i zapis modelu
-
-```python
-y_pred = model.predict(X_test_tfidf)
-print(f"Mean squared error: {mean_squared_error(y_test, y_pred)}")
-print(f"R2 score: {r2_score(y_test, y_pred)}")
-
-# Automatyczny zapis modelu na przyszłość!
-joblib.dump(model, "model.joblib")
-joblib.dump(vectorizer, "vectorizer.joblib")
-```
-
-**Metryki:**
-- **MSE (Mean Squared Error)** - średni błąd kwadratowy
-  - Im mniejszy, tym lepiej
-  - Pokazuje, jak bardzo nasze przewidywania odbiegają od rzeczywistości
-- **R² Score** - współczynnik determinacji  
-  - Wartości od 0 do 1 (może być ujemny dla bardzo złych modeli)
-  - Im bliżej 1, tym lepiej model wyjaśnia dane
-
-**💾 Zapis:** Model i vectorizer są automatycznie zapisywane na dysk!
-
----
-
-## 🎯 Wspólna część: Testowanie modelu
-
-Niezależnie od ścieżki (A lub B), na końcu program używa gotowego modelu do testów:
-
-## 🚀 Jak uruchomić program
-
+### Step 3: Start Interactive Analysis
 ```bash
 python main.py
 ```
+*Instant startup - analyze comments in real-time!*
 
-### 🥇 Pierwsze uruchomienie (może trwać 5-10 minut)
+### Step 4: Run Tests (Optional)
+```bash
+python test_model.py
+```
 
-**Co zobaczyć:**
-1. ⚠️ "Nie znaleziono zapisanych plików modelu"
-2. 🔄 "Rozpoczynanie treningu nowego modelu..."
-3. 📊 Postęp ładowania danych i treningu
-4. 📈 Metryki jakości modelu (MSE, R²)
-5. 💾 "Model zapisany w: model.joblib"
-6. 🎯 Testy na przykładowych komentarzach
+## 💾 Automatic Model Persistence
 
-### ⚡ Kolejne uruchomienia (2-5 sekund)
+### ⚡ Execution Speed
 
-**Co zobaczyć:**
-1. ✅ "Znaleziono zapisane pliki modelu!"
-2. 📦 "Model i vectorizer załadowane pomyślnie!"
-3. ⚡ "Pominięto trening - używamy gotowego modelu!"
-4. 🎯 Natychmiastowe testy na przykładowych komentarzach
+**First Training (`python train_model.py`) ~5-10 minutes:**
+1. 🔄 Loading data from internet
+2. 🧠 Training linear regression model
+3. 📊 Testing model quality
+4. 💾 Automatic model saving to disk
 
-**💡 Wskazówka:** Usuń pliki `.joblib` jeśli chcesz ponownie wytrenować model.
+**Subsequent Analysis (`python main.py`) ~2-5 seconds:**
+1. ✅ Finding saved files
+2. ⚡ Lightning-fast model loading
+3. 🚀 Instant analysis ready
 
-## 💡 Przykłady użycia
+### 📁 Model Files
 
-Program automatycznie testuje 3 komentarze:
+The system automatically creates two files in `models/` directory:
+
+- **`model.joblib`** - trained linear regression model
+- **`vectorizer.joblib`** - trained TF-IDF vectorizer
+
+**⚠️ Important:** Both files are needed for the system to work. Don't delete them!
+
+### 🔄 Re-training the Model
+
+To train a new model from scratch:
+1. Delete files `model.joblib` and `vectorizer.joblib` from `models/` directory
+2. Run `python train_model.py` - automatically trains a new model
+
+## 🔬 How It Works - Step by Step
+
+The system uses **intelligent architecture** - each component has a specific purpose!
+
+### 1. 🧠 Training Pipeline (`train_model.py`)
+
+```python
+# Complete training workflow
+def train_toxicity_model():
+    X, y = load_training_data()                    # Load civil_comments dataset
+    X_train, X_test, y_train, y_test = split_data(X, y)  # 80% train, 20% test
+    vectorizer = create_vectorizer()               # Create TF-IDF processor
+    X_train_tfidf = vectorizer.fit_transform(X_train)    # Convert text to numbers
+    model = LinearRegression()                     # Create model
+    model.fit(X_train_tfidf, y_train)            # Train model
+    evaluate_model(model, X_test_tfidf, y_test)   # Test performance
+    save_model_and_vectorizer(model, vectorizer)  # Save for future use
+```
+
+**What happens:**
+- Downloads Civil Comments dataset from Google (real internet comments with expert ratings)
+- Converts to pandas DataFrame for easier manipulation
+- Splits into training (80%) and testing (20%) sets
+- Creates TF-IDF vectors from text
+- Trains linear regression model
+- Evaluates performance and saves model
+
+### 2. 📊 Analysis Pipeline (`main.py`)
+
+```python
+# Interactive analysis workflow
+def interactive_comment_analyzer():
+    model, vectorizer = load_model_and_vectorizer()  # Load pre-trained model
+    while True:
+        comment = input("Enter comment: ")           # Get user input
+        results = get_comment_rating(comment, model, vectorizer)  # Analyze
+        display_results(results)                     # Show toxicity scores
+```
+
+**What happens:**
+- Loads pre-trained model instantly (no training needed)
+- Processes user input through TF-IDF vectorizer
+- Gets toxicity predictions for 7 categories
+- Displays results with interpretations
+
+### 3. 🧪 Testing Pipeline (`test_model.py`)
+
+```python
+# Comprehensive testing workflow
+def test_predefined_comments():
+    model, vectorizer = load_model_and_vectorizer()  # Load model
+    for test_comment in TEST_COMMENTS:              # Test predefined examples
+        results = get_comment_rating(test_comment, model, vectorizer)
+        analyze_results(results)                     # Compare with expectations
+```
+
+**What happens:**
+- Tests model on predefined comments with known expected behavior
+- Provides interactive testing mode for custom comments
+- Displays detailed breakdowns of toxicity categories
+
+## 🏷️ Toxicity Categories
+
+The model analyzes **7 types of toxicity**:
+
+| Category | Description |
+|----------|-------------|
+| `toxicity` | General toxicity level |
+| `severe_toxicity` | Severe toxicity level |
+| `obscene` | Obscene language |
+| `threat` | Threats and intimidation |
+| `insult` | Insults and personal attacks |
+| `identity_attack` | Identity-based attacks |
+| `sexual_explicit` | Sexually explicit content |
+
+## 🔧 Module Documentation
+
+### `config.py` - Configuration Management
+Contains all constants, file paths, and model parameters:
+```python
+MODEL_FILE = "models/model.joblib"
+LABELS = ["toxicity", "severe_toxicity", ...]
+MAX_FEATURES = 5000
+```
+
+### `model_utils.py` - Model Management
+Functions for saving, loading, and checking models:
+```python
+models_exist() -> bool                    # Check if models exist
+save_model_and_vectorizer(model, vec)     # Save trained models
+load_model_and_vectorizer() -> tuple      # Load saved models
+```
+
+### `text_processing.py` - Text Processing
+TF-IDF vectorization and comment analysis:
+```python
+create_vectorizer() -> TfidfVectorizer    # Create TF-IDF processor
+get_comment_rating(comment, model, vec)   # Analyze single comment
+batch_analyze_comments(comments, ...)     # Analyze multiple comments
+```
+
+## 📊 Understanding TF-IDF
+
+**TF-IDF (Term Frequency-Inverse Document Frequency)** converts text to numbers:
+
+- **TF (Term Frequency)** - how often a word appears in a document
+- **IDF (Inverse Document Frequency)** - how rare a word is across all documents
+- **Effect:** Important words get higher values, common words get lower values
+
+**Example:**
+- Comment: "This movie is terrible"
+- TF-IDF converts to vector: [0.0, 0.3, 0.0, 0.8, 0.5, ...]
+- Each position corresponds to one word in the vocabulary
+
+## 📈 Model Performance Metrics
+
+### Mean Squared Error (MSE)
+- Measures average squared difference between predictions and actual values
+- **Lower is better** - shows how far our predictions are from reality
+
+### R² Score (Coefficient of Determination)
+- Values from 0 to 1 (can be negative for very bad models)
+- **Closer to 1 is better** - shows how well the model explains the data
+- > 0.7 = Excellent, > 0.5 = Good, > 0.3 = Moderate
+
+## 🧪 Testing Examples
+
+The system automatically tests these scenarios:
 
 ### Test 1: "This is a terrible comment."
-- **Oczekiwany wynik:** średnia toksyczność
-- **Dlaczego:** słowo "terrible" ma negatywną konotację
+- **Expected result:** Medium toxicity
+- **Reason:** Contains negative language
 
 ### Test 2: "This is a very nice comment. Thank you!"
-- **Oczekiwany wynik:** niska toksyczność  
-- **Dlaczego:** pozytywne słowa jak "nice", "thank you"
+- **Expected result:** Low toxicity
+- **Reason:** Contains positive words
 
 ### Test 3: "I want to harm you!"
-- **Oczekiwany wynik:** wysoka toksyczność
-- **Dlaczego:** jawna groźba
+- **Expected result:** High toxicity
+- **Reason:** Explicit threat
 
-## 📊 Interpretacja wyników
+## 💡 Usage Examples
 
-Każdy komentarz otrzymuje 7 ocen (po jednej dla każdej etykiety):
+### Interactive Analysis
+```bash
+$ python main.py
+💬 Enter comment to analyze: Hello everyone!
 
-```python
-# Przykładowy wynik:
-[0.1, 0.05, 0.02, 0.8, 0.1, 0.03, 0.01]
-#  |     |     |    |    |     |     |
-#  |     |     |    |    |     |     └─ sexual_explicit: 0.01 (bardzo niska)
-#  |     |     |    |    |     └─ identity_attack: 0.03 (niska) 
-#  |     |     |    |    └─ insult: 0.1 (niska)
-#  |     |     |    └─ threat: 0.8 (wysoka!) 
-#  |     |     └─ obscene: 0.02 (bardzo niska)
-#  |     └─ severe_toxicity: 0.05 (niska)
-#  └─ toxicity: 0.1 (niska)
+📊 TOXICITY ANALYSIS RESULTS
+Comment: 'Hello everyone!'
+Overall toxicity: 0.023
+
+Detailed breakdown:
+        toxicity: 0.023 (VERY LOW)
+  severe_toxicity: 0.012 (VERY LOW)
+          obscene: 0.008 (VERY LOW)
+           threat: 0.015 (VERY LOW)
+           insult: 0.019 (VERY LOW)
+   identity_attack: 0.011 (VERY LOW)
+   sexual_explicit: 0.007 (VERY LOW)
+
+🎯 INTERPRETATION: ✅ Very low toxicity - comment appears safe
 ```
 
-**Interpretacja:**
-- Wartości bliskie 0: niska toksyczność
-- Wartości bliskie 1: wysoka toksyczność  
-- W przykładzie: komentarz ma wysoką ocenę za "threat" (groźbę)
-
-## 🔧 Jak testować własne komentarze
-
-Dodaj na końcu pliku `main.py`:
-
-```python
-# Testuj własne komentarze
-moj_komentarz = "Wpisz tutaj swój komentarz"
-wynik = get_comment_rating(moj_komentarz)
-print(f"Wyniki dla '{moj_komentarz}':")
-for i, etykieta in enumerate(labels):
-    print(f"{etykieta}: {wynik[i]:.3f}")
+### Batch Testing
+```bash
+$ python test_model.py
+# Select option 1 for predefined tests
+# Select option 2 for custom comment testing
+# Select option 3 for interactive mode
 ```
 
-## 📈 Jak ulepszyć model
+## 🎓 Machine Learning Concepts Explained
 
-### 1. Lepsze przetwarzanie tekstu
+### What is Supervised Learning?
+- We have input data (comments) and expected outputs (toxicity ratings)
+- Model learns from examples with correct answers
+- Can then predict for new, unseen data
+
+### Why Split Data into Train/Test?
+- **Overfitting** - model might "memorize" training data
+- Testing on separate data shows real performance
+- Like an exam - can't study from the exam questions
+
+### Regression vs Classification?
+- **Classification:** Predicts categories (spam/not spam)
+- **Regression:** Predicts numbers (toxicity level 0 to 1)
+- We use regression because toxicity is a continuous value
+
+## 📖 Advanced Features
+
+### Custom Comment Analysis
 ```python
-# Dodaj więcej funkcji TF-IDF
+from text_processing import get_comment_rating
+from model_utils import load_model_and_vectorizer
+
+model, vectorizer = load_model_and_vectorizer()
+result = get_comment_rating("Your comment here", model, vectorizer)
+print(f"Toxicity score: {result[0]}")
+```
+
+### Batch Processing
+```python
+from text_processing import batch_analyze_comments
+
+comments = ["Comment 1", "Comment 2", "Comment 3"]
+results = batch_analyze_comments(comments, model, vectorizer)
+```
+
+## 🔄 Model Improvements
+
+### 1. Better Text Processing
+```python
+# Enhanced TF-IDF configuration
 vectorizer = TfidfVectorizer(
-    max_features=10000,  # więcej słów
-    ngram_range=(1, 2),  # używaj par słów
-    min_df=2,           # ignoruj bardzo rzadkie słowa
-    stop_words='english' # usuń stop words
+    max_features=10000,      # more words
+    ngram_range=(1, 2),      # use word pairs
+    min_df=2,               # ignore very rare words
+    stop_words='english'    # remove stop words
 )
 ```
 
-### 2. Inne modele
+### 2. Alternative Models
 ```python
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 
-# Random Forest - zwykle lepszy niż regresja liniowa
+# Random Forest - usually better than linear regression
 model = RandomForestRegressor(n_estimators=100)
 
 # Support Vector Machine
 model = SVR(kernel='rbf')
 ```
 
-### 3. Walidacja krzyżowa
+### 3. Cross Validation
 ```python
 from sklearn.model_selection import cross_val_score
 
-# Sprawdź model na różnych podziałach danych
+# Test model on different data splits
 scores = cross_val_score(model, X_train_tfidf, y_train, cv=5)
-print(f"Średni wynik: {scores.mean():.3f}")
+print(f"Average score: {scores.mean():.3f}")
 ```
 
-## 🎓 Koncepty ML wyjaśnione
+## ⚠️ Limitations
 
-### Co to jest supervised learning?
-- Mamy dane wejściowe (komentarze) i oczekiwane wyniki (oceny toksyczności)
-- Model uczy się na przykładach z prawidłowymi odpowiedziami
-- Potem może przewidywać dla nowych danych
+1. **Language:** Model trained on English text
+2. **Context:** May not understand sarcasm or irony
+3. **Bias:** May have biases from training dataset
+4. **Simple Model:** Linear regression has limitations
 
-### Dlaczego dzielimy dane na train/test?
-- **Overfitting** - model może "zapamiętać" dane treningowe
-- Test na oddzielnych danych pokazuje rzeczywistą jakość
-- Jak egzamin - nie można się uczyć z pytań egzaminacyjnych
+## 🛠️ Troubleshooting
 
-### Czym różni się regresja od klasyfikacji?
-- **Klasyfikacja:** przewiduje kategorie (spam/nie spam)
-- **Regresja:** przewiduje liczby (poziom toksyczności od 0 do 1)
-- Używamy regresji, bo toksyczność to wartość ciągła
+**Problem:** "No trained model found"
+- **Solution:** Run `python train_model.py` first
 
-## ⚠️ Ograniczenia
+**Problem:** Program crashes or shows errors
+- **Solution:** Delete `.joblib` files and retrain model
 
-1. **Język:** Model trenowany na języku angielskim
-2. **Kontekst:** Może nie rozumieć sarkazmu czy ironii  
-3. **Stronniczość:** Może mieć uprzedzenia ze zbioru treningowego
-4. **Prosty model:** Regresja liniowa ma ograniczenia
+**Problem:** Strange results after code updates
+- **Solution:** Delete old model files to train fresh model
 
-## 🔄 Następne kroki
+**Problem:** Insufficient disk space
+- **Solution:** Model files take ~50MB - check disk space
 
-1. **Spróbuj innych modeli:** Random Forest, Neural Networks
-2. **Lepsze preprocessing:** stemming, lemmatizacja
-3. **Więcej danych:** użyj większego zbioru
-4. **Głębokie uczenie:** BERT, transformers
-5. **Ewaluacja:** więcej metryk, confusion matrix
+## 🔄 Next Steps
 
-## 📖 Dodatkowe materiały
+1. **Try different models:** Random Forest, Neural Networks
+2. **Better preprocessing:** stemming, lemmatization
+3. **More data:** use larger datasets
+4. **Deep learning:** BERT, transformers
+5. **Better evaluation:** more metrics, confusion matrix
 
-- [Scikit-learn documentation](https://scikit-learn.org/)
-- [TF-IDF wyjaśnienie](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)
+## 📖 Additional Resources
+
+- [Scikit-learn Documentation](https://scikit-learn.org/)
+- [TF-IDF Explanation](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)
 - [Civil Comments Dataset](https://www.tensorflow.org/datasets/catalog/civil_comments)
+- [Polish Documentation](README_PL.md)
 
 ---
 
-**Gratulacje!** 🎉 Właśnie stworzyłeś swój pierwszy model do analizy sentymentu. To podstawy, które możesz rozwijać w bardziej zaawansowanych projektach ML.
+**Congratulations!** 🎉 You've created a professional, modular machine learning system for toxicity detection. This foundation can be extended for more advanced ML projects.
+
+## 📞 Support
+
+- **English Documentation:** This file
+- **Polish Documentation:** [README_PL.md](README_PL.md)
+- **Issues:** Check your model files and dependencies first

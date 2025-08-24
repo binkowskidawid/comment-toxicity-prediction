@@ -1,0 +1,16 @@
+# Toxicity Detection System Dependencies
+# Install with: pip install -r requirements.txt
+
+# Dataset loading and manipulation
+datasets>=2.14.0
+pandas>=1.5.0
+
+# Machine learning and text processing
+scikit-learn>=1.3.0
+
+# Model persistence (included with scikit-learn)
+joblib>=1.3.0
+
+# Additional useful packages (optional but recommended)
+numpy>=1.24.0
+scipy>=1.10.0
