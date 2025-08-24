@@ -30,6 +30,8 @@ PODSTAWY/
 ├── README.md              # English documentation (this file)
 ├── README_PL.md           # Polish documentation
 ├── requirements.txt       # Project dependencies
+├── pyproject.toml         # Modern Python project configuration
+├── uv.lock                # Dependency lock file
 └── models/                # Saved model files
     ├── model.joblib
     └── vectorizer.joblib
@@ -245,6 +247,28 @@ The system automatically tests these scenarios:
 - **Expected result:** High toxicity
 - **Reason:** Explicit threat
 
+## 📊 Results Interpretation
+
+Each comment receives 7 scores (one for each label):
+
+```python
+# Example result:
+[0.1, 0.05, 0.02, 0.8, 0.1, 0.03, 0.01]
+#  |     |     |    |    |     |     |
+#  |     |     |    |    |     |     └─ sexual_explicit: 0.01 (very low)
+#  |     |     |    |    |     └─ identity_attack: 0.03 (low) 
+#  |     |     |    |    └─ insult: 0.1 (low)
+#  |     |     |    └─ threat: 0.8 (high!) 
+#  |     |     └─ obscene: 0.02 (very low)
+#  |     └─ severe_toxicity: 0.05 (low)
+#  └─ toxicity: 0.1 (low)
+```
+
+**Interpretation:**
+- Values close to 0: low toxicity
+- Values close to 1: high toxicity  
+- In this example: comment has high score for "threat"
+
 ## 💡 Usage Examples
 
 ### Interactive Analysis
@@ -385,7 +409,24 @@ print(f"Average score: {scores.mean():.3f}")
 
 ---
 
-**Congratulations!** 🎉 You've created a professional, modular machine learning system for toxicity detection. This foundation can be extended for more advanced ML projects.
+## 📄 Open Source
+
+This project is open source and available for educational and research purposes. Feel free to:
+
+- 🔍 Study the code and machine learning techniques
+- 🛠️ Modify and experiment with different models
+- 📚 Use it as a learning resource for ML projects
+- 🤝 Contribute improvements and bug fixes
+- 📖 Share knowledge and help others learn
+
+**Contributing:**
+- Fork the repository
+- Create feature branches for your changes
+- Submit pull requests with clear descriptions
+- Follow existing code style and documentation standards
+
+**Educational Use:**
+Perfect for learning about text classification, TF-IDF vectorization, model persistence, and professional Python project structure.
 
 ## 📞 Support
 
