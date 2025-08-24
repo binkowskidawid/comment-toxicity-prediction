@@ -4,6 +4,8 @@
 
 Ten projekt pokazuje, jak stworzyć system automatycznego wykrywania toksyczności w komentarzach internetowych używając technik uczenia maszynowego. Program analizuje teksty i przewiduje poziom toksyczności w różnych kategoriach.
 
+⚡ **NOWOŚĆ:** Program automatycznie zapisuje wytrenowany model! Pierwsze uruchomienie zajmuje kilka minut, ale następne są natychmiastowe.
+
 ## 🎯 Co się nauczysz
 
 - Jak ładować i przetwarzać zbiory danych tekstowych
@@ -11,6 +13,7 @@ Ten projekt pokazuje, jak stworzyć system automatycznego wykrywania toksycznoś
 - Jak trenować model uczenia maszynowego
 - Jak oceniać jakość modelu
 - Jak używać modelu do przewidywań
+- **Jak zapisywać i ładować wytrenowane modele (optymalizacja)**
 
 ## 📚 Wymagania
 
@@ -23,10 +26,89 @@ pip install datasets pandas scikit-learn
 - **datasets** - ładowanie gotowych zbiorów danych
 - **pandas** - manipulacja danymi
 - **scikit-learn** - narzędzia do uczenia maszynowego
+- **joblib** - zapisywanie i ładowanie modelów (wbudowana w scikit-learn)
+- **os.path** - sprawdzanie istnienia plików (wbudowana w Python)
+
+## 💾 Automatyczne zapisywanie modelu
+
+### ⚡ Szybkość uruchomień
+
+**Pierwsze uruchomienie (~5-10 minut):**
+1. 🔄 Ładowanie danych z internetu
+2. 🧠 Trenowanie modelu regresji liniowej
+3. 📊 Testowanie jakości modelu
+4. 💾 Automatyczne zapisanie modelu na dysk
+
+**Kolejne uruchomienia (~2-5 sekund):**
+1. ✅ Znalezienie zapisanych plików
+2. ⚡ Błyskawiczne wczytanie modelu
+3. 🚀 Natychmiastowe uruchomienie testów
+
+### 📁 Pliki modelu
+
+Program automatycznie tworzy dwa pliki:
+
+- **`model.joblib`** - wytrenowany model regresji liniowej
+- **`vectorizer.joblib`** - wytrenowany vectorizer TF-IDF
+
+**⚠️ Ważne:** Oba pliki są potrzebne do działania programu. Nie usuwaj ich!
+
+### 🔄 Re-trenowanie modelu
+
+Jeśli chcesz wytrenować model od nowa:
+1. Usuń pliki `model.joblib` i `vectorizer.joblib`
+2. Uruchom program ponownie - automatycznie wytrenuje nowy model
+
+### 🛠️ Troubleshooting
+
+**Problem:** Program się zawiesza lub pokazuje błędy
+- **Rozwiązanie:** Usuń pliki `.joblib` i uruchom ponownie
+
+**Problem:** Wyniki są dziwne po aktualizacji kodu
+- **Rozwiązanie:** Usuń stare pliki modelu, aby wytrenować nowy
+
+**Problem:** Brak miejsca na dysku
+- **Rozwiązanie:** Pliki modelu zajmują ~50MB - sprawdź miejsce na dysku
 
 ## 🔬 Krok po kroku - jak działa kod
 
-### 1. Ładowanie danych
+Program ma teraz **inteligentną logikę** - sprawdza czy model już istnieje!
+
+### 1. 🔍 Sprawdzenie czy model istnieje
+
+```python
+if models_exist():
+    model, vectorizer = load_model_and_vectorizer()
+else:
+    model, vectorizer = train_new_model()
+```
+
+**Co się dzieje:**
+- Program sprawdza czy istnieją pliki `model.joblib` i `vectorizer.joblib`
+- **Jeśli TAK:** Ładuje zapisane modele (szybko! ⚡)
+- **Jeśli NIE:** Trenuje nowe modele (wolno, ale tylko raz 🐌→⚡)
+
+---
+
+## 🚀 Ścieżka A: Model już istnieje (kolejne uruchomienia)
+
+### Błyskawiczne ładowanie
+
+```python
+model = joblib.load("model.joblib")
+vectorizer = joblib.load("vectorizer.joblib")
+```
+
+**Co się dzieje:**
+- Wczytanie zapisanego modelu z dysku (~1 sekunda)
+- Wczytanie zapisanego vectorizera (~1 sekunda) 
+- Przejście bezpośrednio do testów
+
+---
+
+## 🐌 Ścieżka B: Pierwszy raz (trenowanie nowego modelu)
+
+### 2. Ładowanie danych
 
 ```python
 dataset = load_dataset("google/civil_comments")
@@ -38,7 +120,7 @@ df = dataset["train"].to_pandas()
 - Zawiera prawdziwe komentarze z internetu z ocenami ekspertów
 - Konwertujemy na format pandas DataFrame dla łatwiejszej pracy
 
-### 2. Przygotowanie etykiet
+### 3. Przygotowanie etykiet
 
 ```python
 labels = ["toxicity", "severe_toxicity", "obscene", "threat", "insult", "identity_attack", "sexual_explicit"]
@@ -55,7 +137,7 @@ y = df[labels]  # Oceny toksyczności (dane wyjściowe)
 - `identity_attack` - ataki na tożsamość
 - `sexual_explicit` - treści seksualne
 
-### 3. Podział danych
+### 4. Podział danych
 
 ```python
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -66,7 +148,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 - **20% na test** - do sprawdzenia, czy model działa na nowych danych
 - `random_state=42` - zapewnia powtarzalne wyniki
 
-### 4. Przekształcanie tekstu na liczby (TF-IDF)
+### 5. Przekształcanie tekstu na liczby (TF-IDF)
 
 ```python
 vectorizer = TfidfVectorizer(max_features=5000)
@@ -84,7 +166,7 @@ X_test_tfidf = vectorizer.transform(X_test)
 - TF-IDF zamienia to na wektor liczb: [0.0, 0.3, 0.0, 0.8, 0.5, ...]
 - Każda pozycja odpowiada jednemu słowu ze słownika
 
-### 5. Trenowanie modelu
+### 6. Trenowanie modelu
 
 ```python
 model = LinearRegression()
@@ -97,12 +179,16 @@ model.fit(X_train_tfidf, y_train)
 - Słowa jak "stupid", "hate" dostaną wysokie wagi dodatnie
 - Słowa jak "love", "thank you" dostaną wagi ujemne
 
-### 6. Ocena modelu
+### 7. Ocena i zapis modelu
 
 ```python
 y_pred = model.predict(X_test_tfidf)
 print(f"Mean squared error: {mean_squared_error(y_test, y_pred)}")
 print(f"R2 score: {r2_score(y_test, y_pred)}")
+
+# Automatyczny zapis modelu na przyszłość!
+joblib.dump(model, "model.joblib")
+joblib.dump(vectorizer, "vectorizer.joblib")
 ```
 
 **Metryki:**
@@ -113,17 +199,39 @@ print(f"R2 score: {r2_score(y_test, y_pred)}")
   - Wartości od 0 do 1 (może być ujemny dla bardzo złych modeli)
   - Im bliżej 1, tym lepiej model wyjaśnia dane
 
+**💾 Zapis:** Model i vectorizer są automatycznie zapisywane na dysk!
+
+---
+
+## 🎯 Wspólna część: Testowanie modelu
+
+Niezależnie od ścieżki (A lub B), na końcu program używa gotowego modelu do testów:
+
 ## 🚀 Jak uruchomić program
 
 ```bash
 python main.py
 ```
 
+### 🥇 Pierwsze uruchomienie (może trwać 5-10 minut)
+
 **Co zobaczyć:**
-1. Informacje o zbiorze danych
-2. Metryki jakości modelu
-3. Listę etykiet
-4. Testy na przykładowych komentarzach
+1. ⚠️ "Nie znaleziono zapisanych plików modelu"
+2. 🔄 "Rozpoczynanie treningu nowego modelu..."
+3. 📊 Postęp ładowania danych i treningu
+4. 📈 Metryki jakości modelu (MSE, R²)
+5. 💾 "Model zapisany w: model.joblib"
+6. 🎯 Testy na przykładowych komentarzach
+
+### ⚡ Kolejne uruchomienia (2-5 sekund)
+
+**Co zobaczyć:**
+1. ✅ "Znaleziono zapisane pliki modelu!"
+2. 📦 "Model i vectorizer załadowane pomyślnie!"
+3. ⚡ "Pominięto trening - używamy gotowego modelu!"
+4. 🎯 Natychmiastowe testy na przykładowych komentarzach
+
+**💡 Wskazówka:** Usuń pliki `.joblib` jeśli chcesz ponownie wytrenować model.
 
 ## 💡 Przykłady użycia
 

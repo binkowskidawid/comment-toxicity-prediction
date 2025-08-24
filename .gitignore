@@ -15,3 +15,7 @@ wheels/
 # Others
 .claude
 .ipynb_checkpoints
+
+# models
+model.joblib
+vectorizer.joblib
