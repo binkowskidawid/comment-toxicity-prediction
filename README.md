@@ -20,27 +20,53 @@ This project demonstrates how to create an automated system for detecting toxici
 ## 🏗️ Project Structure
 
 ```
-PODSTAWY/
-├── main.py                 # Interactive comment analyzer
-├── train_model.py         # Standalone model training
-├── test_model.py          # Testing and evaluation
-├── config.py              # Configuration and constants
-├── model_utils.py         # Model save/load utilities
-├── text_processing.py     # Text processing functions
-├── README.md              # English documentation (this file)
-├── README_PL.md           # Polish documentation
-├── requirements.txt       # Project dependencies
-├── pyproject.toml         # Modern Python project configuration
-├── uv.lock                # Dependency lock file
-└── models/                # Saved model files
-    ├── model.joblib
-    └── vectorizer.joblib
+comment-toxicity-prediction/
+├── src/
+│   └── toxicity_detector/           # Main package
+│       ├── __init__.py              # Package initialization
+│       ├── config.py                # Configuration and constants
+│       ├── core/                    # Core functionality
+│       │   ├── __init__.py
+│       │   └── training.py          # Model training logic
+│       ├── utils/                   # Utility modules
+│       │   ├── __init__.py
+│       │   ├── model_utils.py       # Model save/load utilities
+│       │   └── text_processing.py   # Text processing functions
+│       └── cli/                     # Command line interfaces
+│           ├── __init__.py
+│           ├── main.py              # Interactive analyzer
+│           ├── train.py             # Training command
+│           └── test.py              # Testing command
+├── models/                          # Saved model files
+│   ├── model.joblib
+│   └── vectorizer.joblib
+├── Makefile                         # Development commands
+├── LICENSE                          # MIT License
+├── CONTRIBUTING.md                  # Contributor guidelines
+├── README.md                        # English documentation (this file)
+├── README_PL.md                     # Polish documentation
+├── pyproject.toml                   # Modern Python project configuration
+└── uv.lock                          # Dependency lock file
 ```
 
-## 📚 Requirements
+## 📚 Installation
 
+### Prerequisites
+- Python 3.13 or higher
+- [uv](https://docs.astral.sh/uv/) package manager (recommended)
+
+### Install with uv (Recommended)
 ```bash
-pip install -r requirements.txt
+# Install dependencies
+uv sync
+
+# For development
+uv sync --dev
+```
+
+### Install with pip (Alternative)
+```bash
+pip install -e .
 ```
 
 ### Libraries used in the project:
@@ -56,37 +82,58 @@ pip install -r requirements.txt
 
 ### Step 1: Install Dependencies
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### Step 2: Train the Model (First Time Only)
 ```bash
-python train_model.py
+uv run train-toxicity-model
+# or use Makefile
+make train
 ```
 *This takes 5-10 minutes but only needs to be done once*
 
 ### Step 3: Start Interactive Analysis
 ```bash
-python main.py
+uv run toxicity-detector
+# or use Makefile
+make analyze
 ```
 *Instant startup - analyze comments in real-time!*
 
-### Step 4: Run Tests (Optional)
+### Step 4: Run Interactive Tests (Optional)
 ```bash
-python test_model.py
+uv run test-toxicity-model
+# or use Makefile
+make test
+```
+
+## 🛠️ Development Commands
+
+The project includes a Makefile for common development tasks:
+
+```bash
+make install-dev    # Install development dependencies
+make train          # Train the toxicity detection model
+make analyze        # Start interactive comment analyzer
+make test           # Run interactive testing system
+make clean          # Clean up build artifacts
+make build          # Build the package
+make setup          # Setup development environment
+make help           # Show all available commands
 ```
 
 ## 💾 Automatic Model Persistence
 
 ### ⚡ Execution Speed
 
-**First Training (`python train_model.py`) ~5-10 minutes:**
+**First Training (`train-toxicity-model`) ~5-10 minutes:**
 1. 🔄 Loading data from internet
 2. 🧠 Training linear regression model
 3. 📊 Testing model quality
 4. 💾 Automatic model saving to disk
 
-**Subsequent Analysis (`python main.py`) ~2-5 seconds:**
+**Subsequent Analysis (`toxicity-detector`) ~2-5 seconds:**
 1. ✅ Finding saved files
 2. ⚡ Lightning-fast model loading
 3. 🚀 Instant analysis ready
@@ -104,13 +151,13 @@ The system automatically creates two files in `models/` directory:
 
 To train a new model from scratch:
 1. Delete files `model.joblib` and `vectorizer.joblib` from `models/` directory
-2. Run `python train_model.py` - automatically trains a new model
+2. Run `train-toxicity-model` or `make train` - automatically trains a new model
 
 ## 🔬 How It Works - Step by Step
 
 The system uses **intelligent architecture** - each component has a specific purpose!
 
-### 1. 🧠 Training Pipeline (`train_model.py`)
+### 1. 🧠 Training Pipeline (`train-toxicity-model`)
 
 ```python
 # Complete training workflow
@@ -133,7 +180,7 @@ def train_toxicity_model():
 - Trains linear regression model
 - Evaluates performance and saves model
 
-### 2. 📊 Analysis Pipeline (`main.py`)
+### 2. 📊 Analysis Pipeline (`toxicity-detector`)
 
 ```python
 # Interactive analysis workflow
@@ -151,7 +198,7 @@ def interactive_comment_analyzer():
 - Gets toxicity predictions for 7 categories
 - Displays results with interpretations
 
-### 3. 🧪 Testing Pipeline (`test_model.py`)
+### 3. 🧪 Testing Pipeline (`test-toxicity-model`)
 
 ```python
 # Comprehensive testing workflow
@@ -273,7 +320,7 @@ Each comment receives 7 scores (one for each label):
 
 ### Interactive Analysis
 ```bash
-$ python main.py
+$ toxicity-detector
 💬 Enter comment to analyze: Hello everyone!
 
 📊 TOXICITY ANALYSIS RESULTS
@@ -294,7 +341,7 @@ Detailed breakdown:
 
 ### Batch Testing
 ```bash
-$ python test_model.py
+$ uv run test-toxicity-model
 # Select option 1 for predefined tests
 # Select option 2 for custom comment testing
 # Select option 3 for interactive mode
@@ -381,7 +428,7 @@ print(f"Average score: {scores.mean():.3f}")
 ## 🛠️ Troubleshooting
 
 **Problem:** "No trained model found"
-- **Solution:** Run `python train_model.py` first
+- **Solution:** Run `train-toxicity-model` first
 
 **Problem:** Program crashes or shows errors
 - **Solution:** Delete `.joblib` files and retrain model

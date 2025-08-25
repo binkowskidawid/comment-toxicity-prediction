@@ -1,12 +1,51 @@
 [project]
-name = "podstawy"
+name = "toxicity-detector"
 version = "0.1.0"
-description = "Add your description here"
+description = "Machine learning-based toxicity detection system for online comments"
 readme = "README.md"
 requires-python = ">=3.13"
+authors = [
+    { name = "ML Course Project" }
+]
+keywords = ["machine-learning", "toxicity-detection", "nlp", "text-classification"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
 dependencies = [
     "datasets>=4.0.0",
-    "notebook>=7.4.5",
+    "notebook>=7.4.5", 
     "pandas>=2.3.2",
     "scikit-learn>=1.7.1",
+    "joblib>=1.3.0",
+    "numpy>=1.24.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=3.0.0",
+]
+
+[project.scripts]
+toxicity-detector = "toxicity_detector.cli.main:main"
+train-toxicity-model = "toxicity_detector.cli.train:main"
+test-toxicity-model = "toxicity_detector.cli.test:main"
+
+[project.urls]
+Repository = "https://github.com/your-repo/toxicity-detector"
+Documentation = "https://github.com/your-repo/toxicity-detector#readme"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+

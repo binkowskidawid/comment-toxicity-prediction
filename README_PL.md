@@ -20,27 +20,53 @@ Ten projekt pokazuje, jak stworzyć automatyczny system wykrywania toksyczności
 ## 🏗️ Struktura projektu
 
 ```
-PODSTAWY/
-├── main.py                 # Interaktywny analizator komentarzy
-├── train_model.py         # Samodzielne trenowanie modelu
-├── test_model.py          # Testowanie i ocena
-├── config.py              # Konfiguracja i stałe
-├── model_utils.py         # Narzędzia zapisywania/ładowania modelu
-├── text_processing.py     # Funkcje przetwarzania tekstu
-├── README.md              # Dokumentacja angielska
-├── README_PL.md           # Dokumentacja polska (ten plik)
-├── requirements.txt       # Zależności projektu
-├── pyproject.toml         # Nowoczesna konfiguracja projektu Python
-├── uv.lock                # Plik blokady zależności
-└── models/                # Zapisane pliki modelu
-    ├── model.joblib
-    └── vectorizer.joblib
+comment-toxicity-prediction/
+├── src/
+│   └── toxicity_detector/           # Główny pakiet
+│       ├── __init__.py              # Inicjalizacja pakietu
+│       ├── config.py                # Konfiguracja i stałe
+│       ├── core/                    # Podstawowa funkcjonalność
+│       │   ├── __init__.py
+│       │   └── training.py          # Logika trenowania modelu
+│       ├── utils/                   # Moduły narzędziowe
+│       │   ├── __init__.py
+│       │   ├── model_utils.py       # Narzędzia zapisywania/ładowania modelu
+│       │   └── text_processing.py   # Funkcje przetwarzania tekstu
+│       └── cli/                     # Interfejsy wiersza poleceń
+│           ├── __init__.py
+│           ├── main.py              # Interaktywny analizator
+│           ├── train.py             # Polecenie trenowania
+│           └── test.py              # Polecenie testowania
+├── models/                          # Zapisane pliki modelu
+│   ├── model.joblib
+│   └── vectorizer.joblib
+├── Makefile                         # Polecenia deweloperskie
+├── LICENSE                          # Licencja MIT
+├── CONTRIBUTING.md                  # Wytyczne dla współtwórców
+├── README.md                        # Dokumentacja angielska
+├── README_PL.md                     # Dokumentacja polska (ten plik)
+├── pyproject.toml                   # Nowoczesna konfiguracja projektu Python
+└── uv.lock                          # Plik blokady zależności
 ```
 
-## 📚 Wymagania
+## 📚 Instalacja
 
+### Wymagania wstępne
+- Python 3.13 lub nowszy
+- Menedżer pakietów [uv](https://docs.astral.sh/uv/) (zalecany)
+
+### Instalacja z uv (zalecana)
 ```bash
-pip install -r requirements.txt
+# Zainstaluj zależności
+uv sync
+
+# Dla deweloperów
+uv sync --dev
+```
+
+### Instalacja z pip (alternatywa)
+```bash
+pip install -e .
 ```
 
 ### Biblioteki używane w projekcie:
@@ -56,37 +82,58 @@ pip install -r requirements.txt
 
 ### Krok 1: Zainstaluj zależności
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### Krok 2: Wytrenuj model (tylko pierwszy raz)
 ```bash
-python train_model.py
+uv run train-toxicity-model
+# lub użyj Makefile
+make train
 ```
 *To zajmuje 5-10 minut, ale trzeba to zrobić tylko raz*
 
 ### Krok 3: Rozpocznij interaktywną analizę
 ```bash
-python main.py
+uv run toxicity-detector
+# lub użyj Makefile
+make analyze
 ```
 *Natychmiastowe uruchomienie - analizuj komentarze w czasie rzeczywistym!*
 
-### Krok 4: Uruchom testy (opcjonalnie)
+### Krok 4: Uruchom interaktywne testy (opcjonalnie)
 ```bash
-python test_model.py
+uv run test-toxicity-model
+# lub użyj Makefile
+make test
+```
+
+## 🛠️ Polecenia deweloperskie
+
+Projekt zawiera Makefile z typowymi zadaniami deweloperskimi:
+
+```bash
+make install-dev    # Zainstaluj zależności deweloperskie
+make train          # Wytrenuj model wykrywania toksyczności
+make analyze        # Uruchom interaktywny analizator komentarzy
+make test           # Uruchom interaktywny system testowy
+make clean          # Wyczyść artefakty kompilacji
+make build          # Zbuduj pakiet
+make setup          # Skonfiguruj środowisko deweloperskie
+make help           # Pokaż wszystkie dostępne polecenia
 ```
 
 ## 💾 Automatyczne zapisywanie modelu
 
 ### ⚡ Szybkość uruchomienia
 
-**Pierwsze trenowanie (`python train_model.py`) ~5-10 minut:**
+**Pierwsze trenowanie (`train-toxicity-model`) ~5-10 minut:**
 1. 🔄 Ładowanie danych z internetu
 2. 🧠 Trenowanie modelu regresji liniowej
 3. 📊 Testowanie jakości modelu
 4. 💾 Automatyczne zapisanie modelu na dysk
 
-**Kolejne analizy (`python main.py`) ~2-5 sekund:**
+**Kolejne analizy (`toxicity-detector`) ~2-5 sekund:**
 1. ✅ Odnajdywanie zapisanych plików
 2. ⚡ Błyskawiczne ładowanie modelu
 3. 🚀 Natychmiastowa gotowość do analizy
@@ -104,13 +151,13 @@ System automatycznie tworzy dwa pliki w katalogu `models/`:
 
 Aby wytrenować nowy model od początku:
 1. Usuń pliki `model.joblib` i `vectorizer.joblib` z katalogu `models/`
-2. Uruchom `python train_model.py` - automatycznie wytrenuje nowy model
+2. Uruchom `train-toxicity-model` - automatycznie wytrenuje nowy model
 
 ## 🔬 Jak to działa - krok po kroku
 
 System używa **inteligentnej architektury** - każdy komponent ma określony cel!
 
-### 1. 🧠 Pipeline trenowania (`train_model.py`)
+### 1. 🧠 Pipeline trenowania (`train-toxicity-model`)
 
 ```python
 # Kompletny przepływ pracy trenowania
@@ -133,7 +180,7 @@ def train_toxicity_model():
 - Trenuje model regresji liniowej
 - Ocenia wydajność i zapisuje model
 
-### 2. 📊 Pipeline analizy (`main.py`)
+### 2. 📊 Pipeline analizy (`toxicity-detector`)
 
 ```python
 # Interaktywny przepływ pracy analizy
@@ -151,7 +198,7 @@ def interactive_comment_analyzer():
 - Uzyskuje przewidywania toksyczności dla 7 kategorii
 - Wyświetla wyniki z interpretacjami
 
-### 3. 🧪 Pipeline testowania (`test_model.py`)
+### 3. 🧪 Pipeline testowania (`test-toxicity-model`)
 
 ```python
 # Kompleksowy przepływ pracy testowania
@@ -273,7 +320,7 @@ Każdy komentarz otrzymuje 7 ocen (po jednej dla każdej etykiety):
 
 ### Interaktywna analiza
 ```bash
-$ python main.py
+$ toxicity-detector
 💬 Wprowadź komentarz do analizy: Hello everyone!
 
 📊 WYNIKI ANALIZY TOKSYCZNOŚCI
@@ -294,7 +341,7 @@ Szczegółowy podział:
 
 ### Testowanie wsadowe
 ```bash
-$ python test_model.py
+$ uv run test-toxicity-model
 # Wybierz opcję 1 dla predefiniowanych testów
 # Wybierz opcję 2 dla testowania niestandardowych komentarzy
 # Wybierz opcję 3 dla trybu interaktywnego
@@ -381,7 +428,7 @@ print(f"Średni wynik: {scores.mean():.3f}")
 ## 🛠️ Rozwiązywanie problemów
 
 **Problem:** "Nie znaleziono wytrenowanego modelu"
-- **Rozwiązanie:** Uruchom `python train_model.py` najpierw
+- **Rozwiązanie:** Uruchom `train-toxicity-model` najpierw
 
 **Problem:** Program się zawiesza lub pokazuje błędy
 - **Rozwiązanie:** Usuń pliki `.joblib` i wytrenuj model ponownie

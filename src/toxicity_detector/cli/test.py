@@ -4,9 +4,9 @@ Provides comprehensive testing of trained models with predefined and custom comm
 """
 
 from typing import List
-from config import LABELS, SEPARATOR_LENGTH, TEST_SEPARATOR_LENGTH
-from model_utils import load_model_and_vectorizer, models_exist, get_model_info
-from text_processing import get_comment_rating, format_comment_results, get_labels_info
+from toxicity_detector.config import LABELS, SEPARATOR_LENGTH, TEST_SEPARATOR_LENGTH
+from toxicity_detector.utils.model_utils import load_model_and_vectorizer, models_exist, get_model_info
+from toxicity_detector.utils.text_processing import get_comment_rating, format_comment_results, get_labels_info
 
 
 # Predefined test comments with expected behavior
@@ -127,7 +127,7 @@ def test_predefined_comments():
     # Check if model exists
     if not models_exist():
         print("❌ No trained model found!")
-        print("Please run 'python train_model.py' first to train a model.")
+        print("Please run 'train-toxicity-model' first to train a model.")
         return False
     
     try:
@@ -182,7 +182,7 @@ def test_custom_comments(comments: List[str]):
     
     if not models_exist():
         print("❌ No trained model found!")
-        print("Please run 'python train_model.py' first to train a model.")
+        print("Please run 'train-toxicity-model' first to train a model.")
         return []
     
     try:
@@ -228,7 +228,7 @@ def interactive_testing():
     
     if not models_exist():
         print("❌ No trained model found!")
-        print("Please run 'python train_model.py' first.")
+        print("Please run 'train-toxicity-model' first.")
         return
     
     try:
